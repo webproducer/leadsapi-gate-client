@@ -39,10 +39,10 @@ class Client {
 	            json_encode(['target' => $phone, 'text' => $text])
 	        )
 	    );
-	    if (!isset($result['id'])) {
-	    	throw new Exception("No id in result");
+	    if (!isset($result['sending_id'])) {
+	    	throw new Exception("No sending id in result");
 	    }
-	    return new Result($result['id']);
+	    return new Result($result['sending_id']);
 	}
 
 	/**
