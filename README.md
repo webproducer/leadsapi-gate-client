@@ -1,6 +1,12 @@
 # leadsapi-gate-client
 PHP client for leadsapi.org
 
+## Installation
+
+```
+composer require leadsapiorg/gate-client
+```
+
 ## Examples
 
 ### Send SMS
