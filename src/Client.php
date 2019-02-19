@@ -75,7 +75,7 @@ class Client {
 	protected function getHttpClient(): HttpClient
 	{
 		if (!$this->cli) {
-			$this->cli = new Client([
+			$this->cli = new HttpClient([
 		        'base_uri' => $this->endpoint,
 		        'auth' => [$this->user, $this->token]
 	    	]);
