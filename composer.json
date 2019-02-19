@@ -1,0 +1,16 @@
+{
+    "name": "leadsapiorg/gate-client",
+    "type": "library",
+    "description": "Client for leadsapi.org",
+    "homepage": "https://github.com/webproducer/leadsapi-gate-client",
+    "autoload": {
+        "psr-4": {
+            "Leadsapi\\Gate": "src/"
+        }
+    },
+    "require": {
+        "php": ">=7.0",
+        "ext-json": "*",
+        "guzzlehttp/guzzle": "~6.0"
+    }
+}
