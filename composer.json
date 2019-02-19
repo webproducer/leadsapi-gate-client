@@ -5,7 +5,7 @@
     "homepage": "https://github.com/webproducer/leadsapi-gate-client",
     "autoload": {
         "psr-4": {
-            "Leadsapi\\Gate": "src/"
+            "Leadsapi\\Gate\\": "src/"
         }
     },
     "require": {
