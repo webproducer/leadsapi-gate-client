@@ -36,6 +36,6 @@ try {
         }
     }
 } catch (GateException $e) {
-    printf("Error sending: %s\n", $e->getMessage());
+    printf("Got error: %s\n", $e->getMessage());
 }
 ```
