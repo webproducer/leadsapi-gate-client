@@ -19,16 +19,16 @@ $client = new Client('my_username', 'my_token');
 try {
     // Sending one SMS:
     $res = $client->sendSms('13212022278', 'Hello!');
-    printf("SMS sent: sending id is: %d", $res->id);
+    printf("SMS sent: sending id is: %d\n\n", $res->id);
 
     // Sending bulk of messages:
-    $client->sendSmsBulk([
+    $res = $client->sendSmsBulk([
         ['13212022278', "First hello!"],
         ['12064572648', "Second\nhello!"],
         ['13212022368', "Third hello!"],
         ['xxxxxxxxxxx', ":("]
     ]);
-    printf("Bulk sent: %d messages accepted; bulk id is: %d", $res->enqueued, $res->id);
+    printf("Bulk sent: %d messages accepted; bulk id is: %d\n", $res->enqueued, $res->id);
     if (!empty($res->errors)) {
         print("But there's some errors:\n");
         foreach ($res->errors as $msg) {
