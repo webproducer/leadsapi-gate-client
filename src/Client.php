@@ -12,15 +12,10 @@ use GuzzleHttp\Exception\{
 class Client {
 
 	const DEF_ENDPOINT = 'https://gate.leadsapi.org';
-	const TYPE_SMS = 'sms';
-	const TYPE_VIBER = 'viber';
-	const TYPE_EMAIL = 'email';
 
 	private $user;
 	private $token;
 	private $endpoint;
-	private $sendUrl = '/send/sms';
-	private $type = self::TYPE_SMS;
 	private $sender = '';
 	private $gate = '';
 
@@ -31,19 +26,7 @@ class Client {
 		$this->user = $user;
 		$this->token = $token;
 		$this->endpoint = rtrim($endpoint, '/');
-		$this->rebuildSendUrl();
 	}
-
-    /**
-     * @param string $type - One of [TYPE_SMS, TYPE_VIBER, TYPE_EMAIL]
-     * @return Client
-     */
-    public function setType(string $type): self
-    {
-        $this->type = $type;
-        $this->rebuildSendUrl();
-        return $this;
-    }
 
     /**
      * @param string $sender
@@ -52,7 +35,6 @@ class Client {
     public function setSender(string $sender): self
     {
         $this->sender = $sender;
-        $this->rebuildSendUrl();
         return $this;
     }
 
@@ -63,7 +45,6 @@ class Client {
     public function setGate(string $gate): self
     {
         $this->gate = $gate;
-        $this->rebuildSendUrl();
         return $this;
     }
 
@@ -78,7 +59,7 @@ class Client {
 	    $result = $this->send(
 	        new Request(
 	            'POST',
-	            $this->sendUrl,
+	            $this->buildSendUrl('sms'),
 	            ['Content-Type' => 'application/json'],
 	            json_encode(['target' => $phone, 'text' => $text])
 	        )
@@ -102,7 +83,12 @@ class Client {
 	    rewind($body);
 	    try {
             $resp = $this->send(
-                new Request('POST', $this->sendUrl, ['Content-Type' => 'text/tab-separated-values'], $body)
+                new Request(
+                    'POST',
+                    $this->buildSendUrl('sms'),
+                    ['Content-Type' => 'text/tab-separated-values'],
+                    $body
+                )
             );
             if (!isset($resp['bulk_id'])) {
                 throw new Exception("No id in result");
@@ -150,10 +136,10 @@ class Client {
         }
 	}
 
-	private function rebuildSendUrl() {
-	    $this->sendUrl = sprintf(
+	private function buildSendUrl(string $type): string {
+	    return sprintf(
 	        '/send/%s%s%s',
-            $this->type,
+            $type,
             $this->gate ? "/{$this->gate}" : '',
             $this->sender ? "?sender={$this->sender}" : ''
         );
