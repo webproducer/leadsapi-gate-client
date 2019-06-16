@@ -15,7 +15,8 @@ composer require leadsapiorg/gate-client
 use Leadsapi\Gate\Client;
 use Leadsapi\Gate\Exception as GateException;
 
-$client = new Client('my_username', 'my_token');
+$client = new Client('my_username', 'my_token'); // Request credentials from your provider
+$client->setGate('test'); // Request list of available gates from your provider
 try {
     // Sending one SMS:
     $res = $client->sendSms('13212022278', 'Hello!');
