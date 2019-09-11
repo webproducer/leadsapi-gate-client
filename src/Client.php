@@ -10,7 +10,7 @@ class Client
 {
     const DEF_ENDPOINT = 'https://gate.leadsapi.org';
     const FIELD_TARGET = 'target';
-    const FIELD_TEXT = 'text';
+    const FIELD_BODY = 'body';
     const FIELD_SENDER = 'sender';
 
     private $user;
@@ -49,12 +49,12 @@ class Client
 
     /**
      * @param string $phone
-     * @param string $text
+     * @param string $body
      * @param string $sender
      * @return Result
      * @throws Exception
      */
-    public function sendSms(string $phone, string $text, string $sender = null): Result
+    public function sendSms(string $phone, string $body, string $sender = null): Result
     {
         $result = $this->send(
             new Request(
@@ -63,7 +63,7 @@ class Client
                 ['Content-Type' => 'application/json'],
                 json_encode([
                     self::FIELD_TARGET => $phone,
-                    self::FIELD_TEXT => $text,
+                    self::FIELD_BODY => $body,
                     self::FIELD_SENDER => $sender ?? $this->sender
                 ])
             )
@@ -82,15 +82,15 @@ class Client
      */
     public function sendSmsBulk(iterable $messages, string $sender = null): BulkResult
     {
-        $body = fopen('php://temp', 'r+');
-        fwrite($body, $this->makeRow([self::FIELD_TARGET, self::FIELD_TEXT, self::FIELD_SENDER]));
+        $requestBody = fopen('php://temp', 'r+');
+        fwrite($requestBody, $this->makeRow([self::FIELD_TARGET, self::FIELD_BODY, self::FIELD_SENDER]));
         $rowsProcessed = 0;
-        foreach ($messages as [$phone, $text]) {
-            fwrite($body, $this->makeRow([$phone, $text, $sender ?? $this->sender]));
+        foreach ($messages as [$phone, $messageBody]) {
+            fwrite($requestBody, $this->makeRow([$phone, $messageBody, $sender ?? $this->sender]));
             $rowsProcessed++;
         }
         if ($rowsProcessed > 0) {
-            rewind($body);
+            rewind($requestBody);
         }
         try {
             $resp = $this->send(
@@ -98,7 +98,7 @@ class Client
                     'POST',
                     $this->buildSendUrl('sms'),
                     ['Content-Type' => 'text/tab-separated-values'],
-                    $body
+                    $requestBody
                 )
             );
             if (!isset($resp['bulk_id'])) {
@@ -109,7 +109,7 @@ class Client
             $result->errors = $resp['errors'] ?? [];
             return $result;
         } finally {
-            @fclose($body);
+            @fclose($requestBody);
         }
     }
 
@@ -150,12 +150,7 @@ class Client
 
     private function buildSendUrl(string $type): string
     {
-        return sprintf(
-            '/send/%s%s%s',
-            $type,
-            $this->gate ? "/{$this->gate}" : '',
-            $this->sender ? "?sender={$this->sender}" : ''
-        );
+        return sprintf('/send/%s%s', $type, $this->gate ? "/{$this->gate}" : '');
     }
 
     private function makeRow(...$chunks): string

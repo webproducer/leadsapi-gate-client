@@ -20,29 +20,6 @@ class ClientTest extends TestCase
     private $requestBodyContent = '';
 
     /**
-     * @dataProvider setSenderDataProvider
-     * @param string $sender
-     * @param string $expectedUri
-     * @throws GateException
-     * @throws \ReflectionException
-     */
-    public function testSetSender(string $sender, string $expectedUri)
-    {
-        $client = $this->makeClient($this->getHttpClientSendCallback(new Response(200, [], '{"sending_id":1}')));
-        $client->setSender($sender);
-        $client->sendSms('1', '2');
-        $this->assertEquals($expectedUri, "{$this->request->getUri()}");
-    }
-
-    public function setSenderDataProvider(): array
-    {
-        return [
-            ['', '/send/sms'],
-            ['sender_name', '/send/sms?sender=sender_name'],
-        ];
-    }
-
-    /**
      * @dataProvider setGateDataProvider
      * @param string $gate
      * @param string $expectedUri
@@ -87,17 +64,17 @@ class ClientTest extends TestCase
             [
                 ['phone' => '12345678900', 'body' => 'Message body'],
                 '',
-                '{"target":"12345678900","text":"Message body","sender":""}',
+                '{"target":"12345678900","body":"Message body","sender":""}',
             ],
             [
                 ['phone' => '12345678900', 'body' => 'Message body'],
                 'main_sender',
-                '{"target":"12345678900","text":"Message body","sender":"main_sender"}',
+                '{"target":"12345678900","body":"Message body","sender":"main_sender"}',
             ],
             [
                 ['phone' => '12345678900', 'body' => 'Message body', 'sender' => 'Message sender'],
                 'main_sender',
-                '{"target":"12345678900","text":"Message body","sender":"Message sender"}',
+                '{"target":"12345678900","body":"Message body","sender":"Message sender"}',
             ],
         ];
     }
@@ -189,7 +166,7 @@ class ClientTest extends TestCase
                 ],
                 '', // Main sender
                 <<<EOD
-target	text	sender
+target	body	sender
 12345678901	Message body 1	
 12345678902	Message body 2	
 12345678903	Message body 3	
@@ -206,7 +183,7 @@ EOD
                 ],
                 'Main sender',
                 <<<EOD
-target	text	sender
+target	body	sender
 12345678901	Message body 1	Main sender
 12345678902	Message body 2	Main sender
 12345678903	Message body 3	Main sender
@@ -224,7 +201,7 @@ EOD
                 })),
                 'Main sender',
                 <<<EOD
-target	text	sender
+target	body	sender
 12345678901	Message body 1	Main sender
 12345678902	Message body 2	Main sender
 12345678903	Message body 3	Main sender
@@ -241,7 +218,7 @@ EOD
                 ],
                 'Main sender',
                 <<<EOD
-target	text	sender
+target	body	sender
 12345678901	Message body 1	
 12345678902	Message body 2	
 12345678903	Message body 3	
@@ -259,7 +236,7 @@ EOD
                 })),
                 'Main sender',
                 <<<EOD
-target	text	sender
+target	body	sender
 12345678901	Message body 1	
 12345678902	Message body 2	
 12345678903	Message body 3	
@@ -276,7 +253,7 @@ EOD
                 ],
                 'Main sender',
                 <<<EOD
-target	text	sender
+target	body	sender
 12345678901	Message body 1	Bulk sender
 12345678902	Message body 2	Bulk sender
 12345678903	Message body 3	Bulk sender
@@ -293,7 +270,7 @@ EOD
                 })),
                 'Main sender',
                 <<<EOD
-target	text	sender
+target	body	sender
 12345678901	Message body 1	Bulk sender
 12345678902	Message body 2	Bulk sender
 12345678903	Message body 3	Bulk sender
