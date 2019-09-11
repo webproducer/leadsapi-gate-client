@@ -9,9 +9,9 @@ use GuzzleHttp\Exception\GuzzleException;
 class Client
 {
     const DEF_ENDPOINT = 'https://gate.leadsapi.org';
-    const HEADER_TARGET = 'target';
-    const HEADER_TEXT = 'text';
-    const HEADER_SENDER = 'sender';
+    const FIELD_TARGET = 'target';
+    const FIELD_TEXT = 'text';
+    const FIELD_SENDER = 'sender';
 
     private $user;
     private $token;
@@ -61,7 +61,11 @@ class Client
                 'POST',
                 $this->buildSendUrl('sms'),
                 ['Content-Type' => 'application/json'],
-                json_encode(['target' => $phone, 'text' => $text, 'sender' => $sender ?? $this->sender])
+                json_encode([
+                    self::FIELD_TARGET => $phone,
+                    self::FIELD_TEXT => $text,
+                    self::FIELD_SENDER => $sender ?? $this->sender
+                ])
             )
         );
         if (!isset($result['sending_id'])) {
@@ -72,16 +76,22 @@ class Client
 
     /**
      * @param iterable $messages
+     * @param string|null $sender
      * @return BulkResult
      * @throws Exception
      */
-    public function sendSmsBulk(iterable $messages): BulkResult
+    public function sendSmsBulk(iterable $messages, string $sender = null): BulkResult
     {
         $body = fopen('php://temp', 'r+');
-        foreach ($this->getRows($messages) as $row) {
-            fwrite($body, $row);
+        fwrite($body, $this->makeRow([self::FIELD_TARGET, self::FIELD_TEXT, self::FIELD_SENDER]));
+        $rowsProcessed = 0;
+        foreach ($messages as [$phone, $text]) {
+            fwrite($body, $this->makeRow([$phone, $text, $sender ?? $this->sender]));
+            $rowsProcessed++;
         }
-        rewind($body);
+        if ($rowsProcessed > 0) {
+            rewind($body);
+        }
         try {
             $resp = $this->send(
                 new Request(
@@ -146,31 +156,6 @@ class Client
             $this->gate ? "/{$this->gate}" : '',
             $this->sender ? "?sender={$this->sender}" : ''
         );
-    }
-
-    private function getRows(iterable $messages): \Generator
-    {
-        if (is_array($messages)) {
-            $messages = new \ArrayIterator($messages);
-        } elseif ($messages instanceof \Traversable) {
-            $messages = new \IteratorIterator($messages);
-        }
-        $messages->rewind();
-        if (!$messages->valid()) {
-            return;
-        }
-        $firstRow = $messages->current();
-        $headers = [self::HEADER_TARGET, self::HEADER_TEXT];
-        if (isset($firstRow[2])) { // Sender exists
-            $headers[] = self::HEADER_SENDER;
-        }
-        yield $this->makeRow($headers);
-        yield $this->makeRow($firstRow);
-        $messages->next();
-        while ($messages->valid()) {
-            yield $this->makeRow($messages->current());
-            $messages->next();
-        }
     }
 
     private function makeRow(...$chunks): string

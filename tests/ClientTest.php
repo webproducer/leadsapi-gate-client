@@ -154,14 +154,21 @@ class ClientTest extends TestCase
     /**
      * @dataProvider sendSmsBulkDataProvider
      * @param iterable $messages
+     * @param string $mainSender
+     * @param string $bulkSender
      * @param string $expectedRequestBody
      * @throws GateException
      * @throws \ReflectionException
      */
-    public function testSendSmsBulk(iterable $messages, string $expectedRequestBody)
-    {
+    public function testSendSmsBulk(
+        iterable $messages,
+        string $mainSender,
+        string $expectedRequestBody,
+        string $bulkSender = null
+    ) {
         $client = $this->makeClient($this->getHttpClientSendCallback(new Response(200, [], '{"bulk_id":1}')));
-        $client->sendSmsBulk($messages);
+        $client->setSender($mainSender);
+        $client->sendSmsBulk($messages, $bulkSender);
         $this->assertEquals($expectedRequestBody, $this->requestBodyContent);
     }
 
@@ -169,8 +176,10 @@ class ClientTest extends TestCase
     {
         return [
             [
-                [],
-                '',
+                [], // Messages
+                '', // Main sender
+                '', // Expected request body
+                null, // Bulk sender
             ],
             [
                 [
@@ -178,47 +187,120 @@ class ClientTest extends TestCase
                     ['12345678902', 'Message body 2'],
                     ['12345678903', 'Message body 3'],
                 ],
+                '', // Main sender
                 <<<EOD
-target	text
-12345678901	Message body 1
-12345678902	Message body 2
-12345678903	Message body 3
+target	text	sender
+12345678901	Message body 1	
+12345678902	Message body 2	
+12345678903	Message body 3	
 
 EOD
                 ,
-
+                null, // Bulk sender
             ],
             [
                 [
-                    ['12345678901', 'Message body 1', 'Message sender 1'],
-                    ['12345678902', 'Message body 2', 'Message sender 2'],
-                    ['12345678903', 'Message body 3', 'Message sender 3'],
+                    ['12345678901', 'Message body 1'],
+                    ['12345678902', 'Message body 2'],
+                    ['12345678903', 'Message body 3'],
                 ],
+                'Main sender',
                 <<<EOD
 target	text	sender
-12345678901	Message body 1	Message sender 1
-12345678902	Message body 2	Message sender 2
-12345678903	Message body 3	Message sender 3
+12345678901	Message body 1	Main sender
+12345678902	Message body 2	Main sender
+12345678903	Message body 3	Main sender
 
 EOD
                 ,
+                null, // Bulk sender
 
             ],
             [
                 new \IteratorIterator(call_user_func(function (): \Generator {
-                    yield ['12345678901', 'Message body 1', 'Message sender 1'];
-                    yield ['12345678902', 'Message body 2', 'Message sender 2'];
-                    yield ['12345678903', 'Message body 3', 'Message sender 3'];
+                    yield ['12345678901', 'Message body 1'];
+                    yield ['12345678902', 'Message body 2'];
+                    yield ['12345678903', 'Message body 3'];
                 })),
+                'Main sender',
                 <<<EOD
 target	text	sender
-12345678901	Message body 1	Message sender 1
-12345678902	Message body 2	Message sender 2
-12345678903	Message body 3	Message sender 3
+12345678901	Message body 1	Main sender
+12345678902	Message body 2	Main sender
+12345678903	Message body 3	Main sender
 
 EOD
                 ,
+                null, // Bulk sender
+            ],
+            [
+                [
+                    ['12345678901', 'Message body 1'],
+                    ['12345678902', 'Message body 2'],
+                    ['12345678903', 'Message body 3'],
+                ],
+                'Main sender',
+                <<<EOD
+target	text	sender
+12345678901	Message body 1	
+12345678902	Message body 2	
+12345678903	Message body 3	
 
+EOD
+                ,
+                '', // Bulk sender
+
+            ],
+            [
+                new \IteratorIterator(call_user_func(function (): \Generator {
+                    yield ['12345678901', 'Message body 1'];
+                    yield ['12345678902', 'Message body 2'];
+                    yield ['12345678903', 'Message body 3'];
+                })),
+                'Main sender',
+                <<<EOD
+target	text	sender
+12345678901	Message body 1	
+12345678902	Message body 2	
+12345678903	Message body 3	
+
+EOD
+                ,
+                '', // Bulk sender
+            ],
+            [
+                [
+                    ['12345678901', 'Message body 1'],
+                    ['12345678902', 'Message body 2'],
+                    ['12345678903', 'Message body 3'],
+                ],
+                'Main sender',
+                <<<EOD
+target	text	sender
+12345678901	Message body 1	Bulk sender
+12345678902	Message body 2	Bulk sender
+12345678903	Message body 3	Bulk sender
+
+EOD
+                ,
+                'Bulk sender',
+            ],
+            [
+                new \IteratorIterator(call_user_func(function (): \Generator {
+                    yield ['12345678901', 'Message body 1'];
+                    yield ['12345678902', 'Message body 2'];
+                    yield ['12345678903', 'Message body 3'];
+                })),
+                'Main sender',
+                <<<EOD
+target	text	sender
+12345678901	Message body 1	Bulk sender
+12345678902	Message body 2	Bulk sender
+12345678903	Message body 3	Bulk sender
+
+EOD
+                ,
+                'Bulk sender',
             ],
         ];
     }
