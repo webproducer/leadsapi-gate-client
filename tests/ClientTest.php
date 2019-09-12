@@ -68,13 +68,18 @@ class ClientTest extends TestCase
             ],
             [
                 ['phone' => '12345678900', 'body' => 'Message body'],
-                'main_sender',
-                '{"target":"12345678900","body":"Message body","sender":"main_sender"}',
+                'Main sender',
+                '{"target":"12345678900","body":"Message body","sender":"Main sender"}',
             ],
             [
                 ['phone' => '12345678900', 'body' => 'Message body', 'sender' => 'Message sender'],
-                'main_sender',
+                'Main sender',
                 '{"target":"12345678900","body":"Message body","sender":"Message sender"}',
+            ],
+            [
+                ['phone' => '12345678900', 'body' => 'Message body', 'sender' => ''],
+                'Main sender',
+                '{"target":"12345678900","body":"Message body","sender":""}',
             ],
         ];
     }
