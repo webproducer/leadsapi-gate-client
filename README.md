@@ -1,5 +1,5 @@
 # leadsapi-gate-client
-PHP client for leadsapi.org
+PHP client for gate.leadsapi.org
 
 ## Installation
 
@@ -15,25 +15,36 @@ composer require leadsapiorg/gate-client
 use Leadsapi\Gate\Client;
 use Leadsapi\Gate\Exception as GateException;
 
+///////// Preparing client
+
 $client = new Client('my_username', 'my_token'); // Request credentials from your provider
-$client->setGate('test'); // Request list of available gates from your provider
-$client->setSender('Main sender'); // Optional. Will be added to each message.
+
+// If you need to change the channel:
+$client->setGate('test');
+
+// If you need to set sender:
+$client->setSender('Main sender');
+
 try {
-    // Sending one SMS:
+    
+    ///////// Single message mode
+
     $res = $client->sendSms('13212022278', 'Hello!');
     printf("SMS sent: sending id is: %d\n\n", $res->id);
     
-    // Sending one SMS with sender:
-    $res = $client->sendSms('13212022278', 'Hello!', 'Special sender'); // Main sender will be replaced by Special sender
-    printf("SMS sent: sending id is: %d\n\n", $res->id);
+    // Setting sender on single message level:
+    $res = $client->sendSms('13212022278', 'Hello!', 'Special sender');
 
-    // Sending bulk of messages:
-    $res = $client->sendSmsBulk([
+    ///////// Bulk mode
+
+    $messages = [
         ['13212022278', "First hello!"],
         ['12064572648', "Second\nhello!"],
         ['13212022368', "Third hello!"],
         ['xxxxxxxxxxx', ":("]
-    ]);
+    ];
+
+    $res = $client->sendSmsBulk($messages);
     printf("Bulk sent: %d messages accepted; bulk id is: %d\n", $res->enqueued, $res->id);
     if (!empty($res->errors)) {
         print("But there's some errors:\n");
@@ -42,12 +53,8 @@ try {
         }
     }
 
-    // Sending bulk of messages:
-    $res = $client->sendSmsBulk([
-        ['13212022278', "First hello!"],
-         ['12064572648', "Second\nhello!"],
-   ], 'Special sender'); // Main sender will be replaced by Special sender
-    printf("Bulk sent: %d messages accepted; bulk id is: %d\n", $res->enqueued, $res->id);
+    // Setting sender on bulk level:
+    $res = $client->sendSmsBulk($messages, 'Special sender');
 
 } catch (GateException $e) {
     printf("Got error: %s\n", $e->getMessage());
